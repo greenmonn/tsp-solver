@@ -18,8 +18,11 @@ class Position():
 
 
 class DistanceMatrix():
-    def __init__(self, N):
-        self.matrix = [[0] * i for i in range(N)]
+    def __init__(self, N, init_matrix=None):
+        if init_matrix != None:
+            self.matrix = init_matrix
+        else:
+            self.matrix = [[0] * i for i in range(N)]
 
     def setDistance(self, n1, n2, mode):
         if n1.id <= n2.id:
@@ -52,6 +55,15 @@ class Node():
             self.position = None
         else:
             self.position = Position(x, y)
+
+    def __eq__(self, other):
+        if other is None:
+            return False
+            
+        return self.id == other.id
+
+    def __lt__(self, other):
+        return self.id < other.id
 
     def distance(self, node):
         if self.position == None:
