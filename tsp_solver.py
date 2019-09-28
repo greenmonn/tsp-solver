@@ -21,8 +21,7 @@ class TSP():
 
         self.nodes = [Node(id) for id in range(1, N+1)]
 
-        self.distanceMatrix = DistanceMatrix(N)
-        self.distanceMatrix.matrix = distance_array
+        self.distanceMatrix = DistanceMatrix(N, distance_array)
 
     def from_file(self, file_name, mode="euc2d"):
         with open(file_name) as f:
@@ -88,9 +87,9 @@ def solve_dp(tsp):
     start_index = 0
     start_node = tsp.nodes[start_index]
 
-    # Optimization 2: Memoize M(i)(visited)
     N = len(tsp.nodes)
 
+    # Optimization 2: Memoize M(i)(visited)
     path, length = _get_shortest_path(
         start=start_node, last=start_node, visited=(1 << start_index),
         tsp=tsp)

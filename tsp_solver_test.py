@@ -2,6 +2,8 @@ import pytest
 
 from tsp_solver import TSP, solve_exhaustive, solve_dp
 
+# Problem source: https://people.sc.fsu.edu/~jburkardt/datasets/tsp/tsp.html
+# Problem source 2: http://elib.zib.de/pub/mp-testdata/tsp/tsplib/tsp/index.html
 
 def test_read_file():
     problem = TSP()
