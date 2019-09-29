@@ -70,6 +70,25 @@ def test_edge_recombination_crossover():
     print(path_to_id(child1.path))
     print(path_to_id(child2.path))
 
+
+def test_CX2_crossover():
+    nodes = [Node(i+1) for i in range(8)]
+    distanceMatrix = DistanceMatrix(8)
+
+    Graph.set_graph(nodes, distanceMatrix)
+    # parent1 = Tour(path=[3,4,8,2,7,1,6,5])
+    # parent2 = Tour(path=[4,2,5,1,6,8,3,7])
+    # parent1 = Tour(path=[1,2,3,4,5,6,7,8])
+    # parent2 = Tour(path=[2,7,5,8,4,1,6,3])
+    parent1 = Tour(path=[7, 6, 3, 8, 5, 1, 4, 2])
+    parent2 = Tour(path=[3, 8, 2, 4, 5, 1, 7, 6])
+    child1, child2 = GA._crossover_CX2(parent1, parent2)
+
+    assert sorted(child1.path) == sorted(nodes)
+    assert sorted(child2.path) == sorted(nodes)
+    print(path_to_id(child1.path))
+    print(path_to_id(child2.path))
+
 def test_mutate():
     nodes = [Node(i+1) for i in range(5)]
     distanceMatrix = DistanceMatrix(5, init_matrix=[

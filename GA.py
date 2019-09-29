@@ -15,6 +15,7 @@ class Graph:
     @classmethod
     def set_graph(cls, nodes, distanceMatrix):
         cls.nodes = nodes
+        cls.num_nodes = len(nodes)
         cls.distanceMatrix = distanceMatrix
 
         cls.nodes_by_id = {}
@@ -27,35 +28,47 @@ class Graph:
 
 
 class Tour:
-    def __init__(self, is_random=False):
-        assert len(Graph.nodes) > 0
-        self.path = [None] * len(Graph.nodes)
+    def __init__(self, is_random=False, path=None):
+        assert Graph.num_nodes > 0
+
         self.distance = 0
+        self.id_to_position = {}
+
+        if path and len(path) == Graph.num_nodes:
+            path = list(map(lambda id: Node(id=id), path))
 
         if is_random:
             path = copy.deepcopy(Graph.nodes)
             random.shuffle(path)
 
-            prev_node = path[0]
-            for node in path[1:] + path[:1]:
-                self.distance += Graph.distanceMatrix.getDistance(
-                    node, prev_node)
-                prev_node = node
+        if path == None:
+            self.path = [None] * Graph.num_nodes
+            return
 
-            self.path = path
+        for i in range(Graph.num_nodes):
+            self.id_to_position[path[i].id] = i
+
+        prev_node = path[0]
+        for node in path[1:] + path[:1]:
+            self.distance += Graph.distanceMatrix.getDistance(
+                node, prev_node)
+            prev_node = node
+
+        self.path = path
 
     def __len__(self):
-        return len(self.path)
+        return Graph.num_nodes
 
     def __repr__(self):
         return str(self._path_to_id(self.path))
 
     def add_node(self, index, node):
         self.path[index] = node
+        self.id_to_position[node.id] = index
 
     def get_node(self, index):
-        if index >= len(self.path):
-            index -= len(self.path)
+        if index >= Graph.num_nodes:
+            index -= Graph.num_nodes
         return self.path[index]
 
     def contains_node(self, n2):
@@ -81,7 +94,7 @@ class Tour:
         logging.info('Updating distances: {}'.format(time.time() - start_time))
 
     def _path_to_id(self, path):
-        return list(map(lambda node: node.id, path))
+        return list(map(lambda node: node.id if node != None else -1, path))
 
 
 class Population:
@@ -134,15 +147,15 @@ class Population:
 
 
 class GA:
-    mutation_rate = 0.05
+    mutation_rate = 0.03
     elitism = True
     tournament_size = 5
 
     @classmethod
     def evolve_population(cls, population: Population) -> Population:
-        if cls.mutation_rate > 0.001:
-            cls.mutation_rate -= 0.0005
-        
+        # if cls.mutation_rate > 0.001:
+        #     cls.mutation_rate -= 0.0005
+
         print('mutation rate: {}'.format(cls.mutation_rate))
 
         new_population = Population()
@@ -190,14 +203,13 @@ class GA:
 
     @classmethod
     def _crossover(cls, parent1: Tour, parent2: Tour) -> (Tour, Tour):
-        assert len(parent1) == len(parent2)
-        return cls._crossover_edge_recombination(parent1, parent2)
+        return cls._crossover_CX2(parent1, parent2)
 
     @classmethod
     def _crossover_order(cls, parent1: Tour, parent2: Tour) -> (Tour, Tour):
         child1 = Tour()
         child2 = Tour()
-        N = len(parent1)
+        N = Graph.num_nodes
 
         start_index = random.randint(0, N)
         end_index = random.randint(0, N)
@@ -264,9 +276,129 @@ class GA:
         return child1, child2
 
     @classmethod
-    def _crossover_CX2(cls, parent1: Tour, parent2: Tour) -> Tour:
+    def _crossover_CX2(cls, parent1: Tour, parent2: Tour) -> (Tour, Tour):
+        # TODO: Need Refactoring
 
-        pass
+        child1 = Tour()
+        child2 = Tour()
+
+        visited_p1 = [False] * Graph.num_nodes
+        visited_p2 = [False] * Graph.num_nodes
+        child_index = 0
+
+        p1 = parent1
+        p2 = parent2
+
+        remaining_c1 = []
+        remaining_c2 = []
+
+        while True:
+            if len(visited_p2) == 0:
+                # Corner case: no cycle in a step
+                for i in range(len(remaining_c1)):
+                    child1.add_node(-i-1, Graph.nodes_by_id[remaining_c1[i]])
+
+                for i in range(len(remaining_c2)):
+                    child2.add_node(-i-1, Graph.nodes_by_id[remaining_c2[i]])
+
+                return child1, child2
+
+            # Step 2
+            node = p2.get_node(0)
+            visited_p2[0] = True
+            child1.add_node(0 + child_index, node)
+
+            # Step 3:
+            pos = p1.id_to_position[node.id]
+            visited_p1[pos] = True
+            pos2 = p1.id_to_position[p2.get_node(pos).id]
+
+            node2 = p2.get_node(pos2)
+            visited_p2[pos2] = True
+            child2.add_node(0 + child_index, node2)
+
+            i = 1
+            c1_nodes = [node.id]
+            c2_nodes = [node2.id]
+
+            while i + child_index < Graph.num_nodes:
+                if node2.id == p1.get_node(0).id:
+                    visited_p1[0] = True
+                    if len(set(c1_nodes) - set(c2_nodes)) != 0:
+                        for id in c1_nodes:
+                            if id in c2_nodes:
+                                continue
+                            remaining_c2.append(id)
+
+                        for id in c2_nodes:
+                            if id in c1_nodes:
+                                continue
+                            remaining_c1.append(id)
+
+                    break
+
+                # Step 4:
+                pos = p1.id_to_position[node2.id]
+                visited_p1[pos] = True
+                node = p2.get_node(pos)
+
+                visited_p2[pos] = True
+
+                child1.add_node(i + child_index, node)
+                c1_nodes.append(node.id)
+
+                # Repeat Step 3:
+                pos = p1.id_to_position[node.id]
+                visited_p1[pos] = True
+
+                pos2 = p1.id_to_position[p2.get_node(pos).id]
+                node2 = p2.get_node(pos2)
+
+                visited_p2[pos2] = True
+
+                child2.add_node(i + child_index, node2)
+                c2_nodes.append(node2.id)
+
+                i += 1
+
+                if node2.id == p1.get_node(0).id:
+                    visited_p1[0] = True
+                    if len(set(c1_nodes) - set(c2_nodes)) != 0:
+                        for id in c1_nodes:
+                            if id in c2_nodes:
+                                continue
+                            remaining_c2.append(id)
+                        for id in c2_nodes:
+                            if id in c1_nodes:
+                                continue
+                            remaining_c1.append(id)
+
+                    break
+
+            child_index += i
+            if child_index == Graph.num_nodes:
+                return child1, child2
+
+            new_p1 = Tour()
+            new_p2 = Tour()
+
+            i1 = 0
+            i2 = 0
+            for pos in range(len(visited_p1)):
+                if not visited_p1[pos]:
+                    new_p1.add_node(i1, p1.get_node(pos))
+                    i1 += 1
+                if not visited_p2[pos]:
+                    new_p2.add_node(i2, p2.get_node(pos))
+                    i2 += 1
+
+            assert i1 == i2
+
+            visited_p1 = [False] * i1
+            visited_p2 = [False] * i2
+
+            p1 = new_p1
+            p2 = new_p2
 
     @classmethod
     def _crossover_edge_recombination(cls, parent1: Tour, parent2: Tour) -> (Tour, Tour):
@@ -275,12 +407,12 @@ class GA:
         # Node 2 -> (1, -3, 5)
         # (-) for both adjacent element
         adjacency = {}
-        for i in range(len(parent1)):
+        for i in range(Graph.num_nodes):
             node = parent1.get_node(i)
             adjacency[node.id] = [parent1.get_node(i-1).id,
                                   parent1.get_node(i+1).id]
 
-        for i in range(len(parent2)):
+        for i in range(Graph.num_nodes):
             node = parent2.get_node(i)
             ids = [parent2.get_node(i-1).id, parent2.get_node(i+1).id]
 
@@ -342,7 +474,7 @@ class GA:
                     adjacency[id].remove(-1 * prev_id)
                 except ValueError:
                     pass
-        
+
         def delete_node_from_table(prev_id, adjacency):
             del adjacency[prev_id]
 
@@ -355,7 +487,7 @@ class GA:
             child.add_node(0, parent.get_node(0))
             prev_id = child.get_node(0).id
 
-            for i in range(1, len(child)):
+            for i in range(1, Graph.num_nodes):
                 delete_node_from_all_neighbors(prev_id, adjacency)
 
                 selected_id = select_neighbor_id(prev_id, adjacency)
@@ -372,14 +504,14 @@ class GA:
 
     @classmethod
     def _mutate(cls, tour: Tour):
-        N = len(tour)
+        N = Graph.num_nodes
         for i in range(N):
             if random.random() < cls.mutation_rate:
                 swap_index = random.randint(0, N-1)
 
-                temp = tour.path[i]
-                tour.path[i] = tour.path[swap_index]
-                tour.path[swap_index] = temp
+                temp = tour.get_node(i)
+                tour.add_node(i, tour.get_node(swap_index))
+                tour.add_node(swap_index, temp)
 
         tour.update_distance()
 
@@ -396,14 +528,14 @@ class GA:
 
             selected_tour = tournament.get_fittest()
 
-            def is_equal(t1, t2):
-                for i in range(len(t1)):
-                    if t1.path[i] != t2.path[i]:
-                        return False
-                return True
+            # def is_equal(t1, t2):
+            #     for i in range(Graph.num_nodes):
+            #         if t1.path[i] != t2.path[i]:
+            #             return False
+            #     return True
 
-            if len(selected) == 1 and is_equal(selected[0], selected_tour):
-                continue
+            # if len(selected) == 1 and is_equal(selected[0], selected_tour):
+            #     continue
 
             selected.append(selected_tour)
 
