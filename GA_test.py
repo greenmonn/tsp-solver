@@ -3,13 +3,16 @@ import pytest
 import copy
 
 import crossover as co
+import selection as se
 
 from graph import Graph, Node, DistanceMatrix
 from GA import GA
 from population import Population, Tour
 
 
-def test_population():
+@pytest.fixture()
+def graph():
+    # setup
     nodes = [Node(i+1) for i in range(5)]
     distanceMatrix = DistanceMatrix(5, init_matrix=[
         [],
@@ -20,59 +23,52 @@ def test_population():
     ])
 
     Graph.set_graph(nodes, distanceMatrix)
+
+    yield "resource"
+    # teardown
+    pass
+
+
+def test_population(graph):
     population = Population(5)
 
     for tour in population:
         # print(list(map(lambda node: node.id, tour.path)))
         # print(tour.distance)
-        assert len(tour.path) == len(nodes)
+        assert len(tour.path) == len(Graph.nodes)
 
 
-def test_crossover():
-    nodes = [Node(i+1) for i in range(5)]
-    distanceMatrix = DistanceMatrix(5, init_matrix=[
-        [],
-        [3.0],
-        [4.0, 4.0],
-        [2.0, 6.0, 5.0],
-        [7.0, 3.0, 8.0, 6.0]
-    ])
-
-    Graph.set_graph(nodes, distanceMatrix)
+def test_crossover(graph):
     parent1 = Tour(is_random=True)
     parent2 = Tour(is_random=True)
-    # print(parent1.path)
-    # print(parent2.path)
 
     child1, child2 = GA._crossover(parent1, parent2)
 
-    assert sorted(child1.path) == sorted(nodes)
-    assert sorted(child2.path) == sorted(nodes)
-    # print(path_to_id(child.path))
+    assert sorted(child1.path) == sorted(Graph.nodes)
+    assert sorted(child2.path) == sorted(Graph.nodes)
 
 
-def test_edge_recombination_crossover():
-    nodes = [Node(i+1) for i in range(5)]
-    distanceMatrix = DistanceMatrix(5, init_matrix=[
-        [],
-        [3.0],
-        [4.0, 4.0],
-        [2.0, 6.0, 5.0],
-        [7.0, 3.0, 8.0, 6.0]
-    ])
+def test_rank_based_selection(graph):
+    population = Population(10)
 
-    Graph.set_graph(nodes, distanceMatrix)
+    a = population.get_rank_probability(2)
+
+    assert len(a) == 10
+    assert abs(sum(a) - 1) < 0.001
+
+    parents = se.select_roulette_sampling(population, num_samples=2, s=1.5)
+
+    assert len(parents) == 2
+
+
+def test_edge_recombination_crossover(graph):
     parent1 = Tour(is_random=True)
     parent2 = Tour(is_random=True)
-    # print(parent1.path)
-    # print(parent2.path)
 
     child1, child2 = co.crossover_edge_recombination(parent1, parent2)
 
-    assert sorted(child1.path) == sorted(nodes)
-    assert sorted(child2.path) == sorted(nodes)
-    print(path_to_id(child1.path))
-    print(path_to_id(child2.path))
+    assert sorted(child1.path) == sorted(Graph.nodes)
+    assert sorted(child2.path) == sorted(Graph.nodes)
 
 
 def test_CX2_crossover():
@@ -90,32 +86,13 @@ def test_CX2_crossover():
 
     assert sorted(child1.path) == sorted(nodes)
     assert sorted(child2.path) == sorted(nodes)
-    print(path_to_id(child1.path))
-    print(path_to_id(child2.path))
 
 
-def test_mutate():
-    nodes = [Node(i+1) for i in range(5)]
-    distanceMatrix = DistanceMatrix(5, init_matrix=[
-        [],
-        [3.0],
-        [4.0, 4.0],
-        [2.0, 6.0, 5.0],
-        [7.0, 3.0, 8.0, 6.0]
-    ])
-
-    Graph.set_graph(nodes, distanceMatrix)
+def test_mutate(graph):
     tour = Tour(is_random=True)
 
     old_tour = copy.deepcopy(tour)
 
     GA._mutate(tour)
 
-    # print(old_tour.path)
-    # print(tour.path)
-
     assert sorted(old_tour.path) == sorted(tour.path)
-
-
-def path_to_id(path):
-    return list(map(lambda node: node.id, path))

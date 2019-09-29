@@ -122,5 +122,19 @@ class Population:
 
         return best_tour
 
-    def get_cumulative_probability(self) -> List[Tour]:
-        pass
+    def get_rank_probability(self, s) -> List[Tour]:
+        assert 1 <= s <= 2
+        # rank based selection probability
+
+        sorted_tour = sorted(enumerate(self.tours), key=lambda t: t[1].distance)
+
+        mu = len(self)
+
+        P = [0] * mu
+
+        for i in range(mu):
+            index = sorted_tour[i][0]
+            P[index]= ((2 - s) / mu) \
+                + (i * (s - 1) / sum(range(mu)))
+        
+        return P

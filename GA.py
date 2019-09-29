@@ -5,6 +5,8 @@ from population import Population, Tour
 import crossover as co
 import selection as se
 
+from typing import List
+
 import random
 import copy
 
@@ -15,9 +17,10 @@ import logging
 
 
 class GA:
-    mutation_rate = 0.03
+    mutation_rate = 0.015
     elitism = True
     tournament_size = 5
+    selection_pressure = 1.5    # 1 to 2
 
     @classmethod
     def evolve_population(cls, population: Population) -> Population:
@@ -37,13 +40,13 @@ class GA:
             logging.info('Create One Child')
             start_time = time.time()
 
-            parent1, parent2 = cls._select(population)
+            parents = cls._select(population)
 
             after_select = time.time()
 
             logging.info('Selection: {}'.format(after_select - start_time))
 
-            child1, child2 = cls._crossover(parent1, parent2)
+            child1, child2 = cls._crossover(parents[0], parents[1])
 
             after_crossover = time.time()
             logging.info('Crossover: {}'.format(
@@ -65,7 +68,7 @@ class GA:
 
     @classmethod
     def _crossover(cls, parent1: Tour, parent2: Tour) -> (Tour, Tour):
-        return co.crossover_CX2(parent1, parent2)
+        return co.crossover_order(parent1, parent2)
 
     @classmethod
     def _mutate(cls, tour: Tour):
@@ -81,7 +84,8 @@ class GA:
         tour.update_distance()
 
     @classmethod
-    def _select(cls, population: Population) -> (Tour, Tour):
+    def _select(cls, population: Population) -> List[Tour]:
+        # return se.select_roulette_sampling(population, s=cls.selection_pressure)
         return se.select_tournament(population, cls.tournament_size)
 
 

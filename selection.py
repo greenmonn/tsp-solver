@@ -1,5 +1,7 @@
 import random
 from population import Population, Tour
+from typing import List
+
 
 def select_tournament(population: Population, tournament_size) -> (Tour, Tour):
     selected = []
@@ -23,7 +25,29 @@ def select_tournament(population: Population, tournament_size) -> (Tour, Tour):
 
         selected.append(selected_tour)
 
-    return selected[0], selected[1]
+    return selected
 
-def select_roulette_sampling(population: Population):
-    pass
+
+def select_roulette_sampling(population: Population, num_samples=2, s: int = 1.5) -> List[Tour]:
+    p = population.get_rank_probability(s)
+
+    N = len(population)
+
+    # a: cumulative probability
+    a = [p[0]] + [0] * (N-1)
+    for i in range(1, N):
+        a[i] = a[i-1] + p[i]
+
+    r = random.uniform(0, 1/num_samples)
+
+    i = 0
+    mating_pool = []
+
+    while len(mating_pool) < num_samples:
+        while a[i] < r:
+            i += 1
+
+        mating_pool.append(population.get_tour(i))
+        r += 1 / num_samples
+
+    return mating_pool
