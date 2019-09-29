@@ -2,8 +2,11 @@ import pytest
 
 import copy
 
-from graph import Node, DistanceMatrix
-from GA import Population, GA, Graph, Tour
+import crossover as co
+
+from graph import Graph, Node, DistanceMatrix
+from GA import GA
+from population import Population, Tour
 
 
 def test_population():
@@ -47,6 +50,7 @@ def test_crossover():
     assert sorted(child2.path) == sorted(nodes)
     # print(path_to_id(child.path))
 
+
 def test_edge_recombination_crossover():
     nodes = [Node(i+1) for i in range(5)]
     distanceMatrix = DistanceMatrix(5, init_matrix=[
@@ -63,7 +67,7 @@ def test_edge_recombination_crossover():
     # print(parent1.path)
     # print(parent2.path)
 
-    child1, child2 = GA._crossover_edge_recombination(parent1, parent2)
+    child1, child2 = co.crossover_edge_recombination(parent1, parent2)
 
     assert sorted(child1.path) == sorted(nodes)
     assert sorted(child2.path) == sorted(nodes)
@@ -82,12 +86,13 @@ def test_CX2_crossover():
     # parent2 = Tour(path=[2,7,5,8,4,1,6,3])
     parent1 = Tour(path=[7, 6, 3, 8, 5, 1, 4, 2])
     parent2 = Tour(path=[3, 8, 2, 4, 5, 1, 7, 6])
-    child1, child2 = GA._crossover_CX2(parent1, parent2)
+    child1, child2 = co.crossover_CX2(parent1, parent2)
 
     assert sorted(child1.path) == sorted(nodes)
     assert sorted(child2.path) == sorted(nodes)
     print(path_to_id(child1.path))
     print(path_to_id(child2.path))
+
 
 def test_mutate():
     nodes = [Node(i+1) for i in range(5)]

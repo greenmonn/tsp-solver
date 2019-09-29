@@ -2,6 +2,22 @@ from geopy.distance import geodesic
 from math import sqrt
 
 
+class Graph:
+    @classmethod
+    def set_graph(cls, nodes, distanceMatrix):
+        cls.nodes = nodes
+        cls.num_nodes = len(nodes)
+        cls.distanceMatrix = distanceMatrix
+
+        cls.nodes_by_id = {}
+        for node in nodes:
+            cls.nodes_by_id[node.id] = node
+
+    @classmethod
+    def get_node(cls, id):
+        return cls.nodes_by_id[id]
+
+
 class Position():
     def __init__(self, x, y):
         self.x = x
@@ -59,7 +75,7 @@ class Node():
     def __eq__(self, other):
         if other is None:
             return False
-            
+
         return self.id == other.id
 
     def __lt__(self, other):
