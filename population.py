@@ -7,6 +7,8 @@ import random
 import copy
 
 # Individual = Tour
+
+
 class Tour:
     def __init__(self, is_random=False, path=None):
         assert Graph.num_nodes > 0
@@ -30,7 +32,7 @@ class Tour:
 
         prev_node = path[0]
         for node in path[1:] + path[:1]:
-            self.distance += Graph.distanceMatrix.getDistance(
+            self.distance += Graph.distanceMatrix.get_distance(
                 node, prev_node)
             prev_node = node
 
@@ -66,7 +68,7 @@ class Tour:
 
         prev_node = self.path[0]
         for node in self.path[1:] + self.path[:1]:
-            self.distance += Graph.distanceMatrix.getDistance(
+            self.distance += Graph.distanceMatrix.get_distance(
                 node, prev_node)
             prev_node = node
 
@@ -126,7 +128,8 @@ class Population:
         assert 1 <= s <= 2
         # rank based selection probability
 
-        sorted_tour = sorted(enumerate(self.tours), key=lambda t: t[1].distance)
+        sorted_tour = sorted(enumerate(self.tours),
+                             key=lambda t: t[1].distance)
 
         mu = len(self)
 
@@ -134,7 +137,7 @@ class Population:
 
         for i in range(mu):
             index = sorted_tour[i][0]
-            P[index]= ((2 - s) / mu) \
+            P[index] = ((2 - s) / mu) \
                 + (i * (s - 1) / sum(range(mu)))
-        
+
         return P

@@ -40,7 +40,7 @@ class DistanceMatrix():
         else:
             self.matrix = [[0] * i for i in range(N)]
 
-    def setDistance(self, n1, n2, mode):
+    def set_distance(self, n1, n2, mode):
         if n1.id <= n2.id:
             return
 
@@ -49,7 +49,7 @@ class DistanceMatrix():
         elif mode == 'geo':
             self.matrix[n1.id - 1][n2.id - 1] = n1.distance_geo(n2)
 
-    def getDistance(self, n1, n2):
+    def get_distance(self, n1, n2):
         if n1.id == n2.id:
             return 0
 
@@ -71,6 +71,7 @@ class Node():
             self.position = None
         else:
             self.position = Position(x, y)
+        self.connected = 0
 
     def __eq__(self, other):
         if other is None:

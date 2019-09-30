@@ -54,7 +54,7 @@ class TSP():
                 n1 = self.nodes[i]
                 n2 = self.nodes[j]
 
-                self.distanceMatrix.setDistance(n1, n2, mode)
+                self.distanceMatrix.set_distance(n1, n2, mode)
 
 
 def solve_exhaustive(tsp):
@@ -121,7 +121,7 @@ def _get_shortest_path(start, last, visited, tsp):
     N = len(D)
 
     if visited == ((1 << N) - 1):
-        return [], D.getDistance(last, start)
+        return [], D.get_distance(last, start)
 
     min_length = MAX_NUMBER
     path = None
@@ -130,7 +130,7 @@ def _get_shortest_path(start, last, visited, tsp):
         if visited & (1 << i) != 0:
             continue
 
-        distance = D.getDistance(last, nodes[i])
+        distance = D.get_distance(last, nodes[i])
         subpath, length = _get_shortest_path(start=start, last=nodes[i],
                                              visited=visited | (1 << i), tsp=tsp)
         length = length + distance
@@ -150,7 +150,7 @@ def _get_path_length(path, distanceMatrix):
     length = 0
 
     for node in path[1:]:
-        length += distanceMatrix.getDistance(node, prev_node)
+        length += distanceMatrix.get_distance(node, prev_node)
         prev_node = node
 
     return length
