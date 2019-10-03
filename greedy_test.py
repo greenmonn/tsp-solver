@@ -33,5 +33,4 @@ def test_greedy_large(tsp):
     tsp.from_file('problems/fl1400.tsp')
     path = solve_greedy(tsp)
 
-    print(list(map(lambda node: node.id, path)))
     assert sorted(path) == sorted(tsp.nodes)

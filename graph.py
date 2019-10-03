@@ -4,10 +4,10 @@ from math import sqrt
 
 class Graph:
     @classmethod
-    def set_graph(cls, nodes, distanceMatrix):
+    def set_graph(cls, nodes, distance_matrix):
         cls.nodes = nodes
         cls.num_nodes = len(nodes)
-        cls.distanceMatrix = distanceMatrix
+        cls.distance_matrix = distance_matrix
 
         cls.nodes_by_id = {}
         for node in nodes:
@@ -71,7 +71,8 @@ class Node():
             self.position = None
         else:
             self.position = Position(x, y)
-        self.connected = 0
+        self.connected = []
+        self.connected_num = 0
 
     def __eq__(self, other):
         if other is None:
