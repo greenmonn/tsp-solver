@@ -12,7 +12,7 @@ MAX_NUMBER = 10 ** 10
 
 class TSP():
     def __init__(self):
-        self.distanceMatrix = None
+        self.distance_matrix = None
         self.nodes = []
         self.timestamp = str(time.time())
 
@@ -21,7 +21,7 @@ class TSP():
 
         self.nodes = [Node(id) for id in range(1, N+1)]
 
-        self.distanceMatrix = DistanceMatrix(N, distance_array)
+        self.distance_matrix = DistanceMatrix(N, distance_array)
 
     def from_file(self, file_name, mode="euc2d"):
         with open(file_name) as f:
@@ -47,14 +47,14 @@ class TSP():
 
         # generate distance matrix N * N
         N = len(self.nodes)
-        self.distanceMatrix = DistanceMatrix(N)
+        self.distance_matrix = DistanceMatrix(N)
 
         for i in range(N):
             for j in range(i):
                 n1 = self.nodes[i]
                 n2 = self.nodes[j]
 
-                self.distanceMatrix.set_distance(n1, n2, mode)
+                self.distance_matrix.set_distance(n1, n2, mode)
 
 
 def solve_exhaustive(tsp):
@@ -70,7 +70,7 @@ def solve_exhaustive(tsp):
     min_path = None
     for path in all_paths:
         path = (start_node,) + path + (start_node,)
-        path_length = _get_path_length(path, tsp.distanceMatrix)
+        path_length = _get_path_length(path, tsp.distance_matrix)
 
         if path_length < min_path_length:
             min_path_length = path_length
@@ -116,7 +116,7 @@ def memoize(func):
 
 @memoize
 def _get_shortest_path(start, last, visited, tsp):
-    D = tsp.distanceMatrix
+    D = tsp.distance_matrix
     nodes = tsp.nodes
     N = len(D)
 
@@ -142,7 +142,7 @@ def _get_shortest_path(start, last, visited, tsp):
     return path, min_length
 
 
-def _get_path_length(path, distanceMatrix):
+def _get_path_length(path, distance_matrix):
     if len(path) < 1:
         return 0
 
@@ -150,7 +150,7 @@ def _get_path_length(path, distanceMatrix):
     length = 0
 
     for node in path[1:]:
-        length += distanceMatrix.get_distance(node, prev_node)
+        length += distance_matrix.get_distance(node, prev_node)
         prev_node = node
 
     return length

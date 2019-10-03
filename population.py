@@ -1,4 +1,5 @@
 from graph import Graph, Node, DistanceMatrix
+from greedy import solve_greedy
 
 from typing import List
 
@@ -17,7 +18,8 @@ class Tour:
         self.id_to_position = {}
 
         if path and len(path) == Graph.num_nodes:
-            path = list(map(lambda id: Node(id=id), path))
+            if type(path[0]) == int:
+                path = list(map(lambda id: Graph.get_node(id), path))
 
         if is_random:
             path = copy.deepcopy(Graph.nodes)
@@ -32,7 +34,7 @@ class Tour:
 
         prev_node = path[0]
         for node in path[1:] + path[:1]:
-            self.distance += Graph.distanceMatrix.get_distance(
+            self.distance += Graph.distance_matrix.get_distance(
                 node, prev_node)
             prev_node = node
 
@@ -45,6 +47,9 @@ class Tour:
         return str(self._path_to_id(self.path))
 
     def add_node(self, index, node):
+        if index >= Graph.num_nodes:
+            index -= Graph.num_nodes
+
         self.path[index] = node
         self.id_to_position[node.id] = index
 
@@ -68,7 +73,7 @@ class Tour:
 
         prev_node = self.path[0]
         for node in self.path[1:] + self.path[:1]:
-            self.distance += Graph.distanceMatrix.get_distance(
+            self.distance += Graph.distance_matrix.get_distance(
                 node, prev_node)
             prev_node = node
 
@@ -77,13 +82,19 @@ class Tour:
 
 
 class Population:
-    def __init__(self, population_size: int = 0):
+    def __init__(self, population_size: int = 0, tours=[]):
         self.tours = []
 
-        for _ in range(population_size):
-            # generate initial individuals
-            random_tour = Tour(is_random=True)
-            self.tours.append(random_tour)
+        if len(tours) == population_size:
+            self.tours = tours
+
+        else:
+            for _ in range(population_size):
+                # generate initial individuals
+                random_tour = Tour(is_random=True)
+                self.tours.append(random_tour)
+
+        assert len(self.tours) == population_size
 
     def __len__(self):
         return len(self.tours)

@@ -5,12 +5,13 @@ from tsp_solver import TSP, solve_exhaustive, solve_dp
 # Problem source: https://people.sc.fsu.edu/~jburkardt/datasets/tsp/tsp.html
 # Problem source 2: http://elib.zib.de/pub/mp-testdata/tsp/tsplib/tsp/index.html
 
+
 def test_read_file():
     problem = TSP()
     problem.from_file('problems/bier127.tsp')
 
     assert len(problem.nodes) == 127
-    assert len(problem.distanceMatrix.matrix) == 127
+    assert len(problem.distance_matrix.matrix) == 127
 
 
 def test_tsp_solve():
