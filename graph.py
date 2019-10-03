@@ -72,7 +72,7 @@ class Node():
         else:
             self.position = Position(x, y)
         self.connected = []
-        self.connected_num = 0
+        self.degree = 0
 
     def __eq__(self, other):
         if other is None:

@@ -131,7 +131,7 @@ def solve_greedy(tsp, optimize_count=3):
         n1 = e.n1
         n2 = e.n2
 
-        if n1.connected_num == 2 or n2.connected_num == 2:
+        if n1.degree == 2 or n2.degree == 2:
             continue
 
         n1_connected_set = set_indices[n1.id]
@@ -140,9 +140,9 @@ def solve_greedy(tsp, optimize_count=3):
         if count_sets > 1 and n1_connected_set == n2_connected_set:
             continue
 
-        e.n1.connected_num += 1
+        e.n1.degree += 1
         e.n1.connected.append(e.n2)
-        e.n2.connected_num += 1
+        e.n2.degree += 1
         e.n2.connected.append(e.n1)
 
         append_edge(e)
@@ -185,7 +185,7 @@ def solve_greedy(tsp, optimize_count=3):
         # reset nodes
         # TODO: use connected list just as local variable (only used in greedy module)
         node.connected = []
-        node.connected_num = 0
+        node.degree = 0
 
     return path
 
