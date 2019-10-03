@@ -4,6 +4,7 @@ import copy
 
 import crossover as co
 import selection as se
+import mutation as mu
 
 from graph import Graph, Node, DistanceMatrix
 from GA import GA
@@ -13,16 +14,19 @@ from population import Population, Tour
 @pytest.fixture()
 def graph():
     # setup
-    nodes = [Node(i+1) for i in range(5)]
-    distanceMatrix = DistanceMatrix(5, init_matrix=[
+    nodes = [Node(i+1) for i in range(8)]
+    distance_matrix = DistanceMatrix(8, init_matrix=[
         [],
         [3.0],
         [4.0, 4.0],
         [2.0, 6.0, 5.0],
-        [7.0, 3.0, 8.0, 6.0]
+        [7.0, 3.0, 8.0, 6.0],
+        [7.0, 3.0, 8.0, 6.0, 9.0],
+        [7.0, 3.0, 8.0, 6.0, 4, 0, 9.0],
+        [7.0, 3.0, 8.0, 6.0, 7.0, 9.0, 10.0]
     ])
 
-    Graph.set_graph(nodes, distanceMatrix)
+    Graph.set_graph(nodes, distance_matrix)
 
     yield "resource"
     # teardown
@@ -73,9 +77,9 @@ def test_edge_recombination_crossover(graph):
 
 def test_CX2_crossover():
     nodes = [Node(i+1) for i in range(8)]
-    distanceMatrix = DistanceMatrix(8)
+    distance_matrix = DistanceMatrix(8)
 
-    Graph.set_graph(nodes, distanceMatrix)
+    Graph.set_graph(nodes, distance_matrix)
     # parent1 = Tour(path=[3,4,8,2,7,1,6,5])
     # parent2 = Tour(path=[4,2,5,1,6,8,3,7])
     # parent1 = Tour(path=[1,2,3,4,5,6,7,8])
@@ -93,6 +97,9 @@ def test_mutate(graph):
 
     old_tour = copy.deepcopy(tour)
 
-    GA._mutate(tour)
+    mu.mutate_swap_connections(
+        tour, mutation_rate=1, only_better=False)
 
+    print(old_tour)
+    print(tour)
     assert sorted(old_tour.path) == sorted(tour.path)

@@ -2,8 +2,11 @@ from graph import Graph, Node, DistanceMatrix
 
 from population import Population, Tour
 
+from greedy import solve_greedy
+
 import crossover as co
 import selection as se
+import mutation as mu
 
 from typing import List
 
@@ -18,16 +21,18 @@ import logging
 
 class GA:
     mutation_rate = 0.015
+    adaptable_mutation_rate = False
     elitism = True
     tournament_size = 5
     selection_pressure = 1.5    # 1 to 2
 
     @classmethod
     def evolve_population(cls, population: Population) -> Population:
-        # if cls.mutation_rate > 0.001:
-        #     cls.mutation_rate -= 0.0005
+        if cls.adaptable_mutation_rate:
+            if cls.mutation_rate > 0.001:
+                cls.mutation_rate -= 0.0005
 
-        print('mutation rate: {}'.format(cls.mutation_rate))
+            logging.info('mutation rate: {}'.format(cls.mutation_rate))
 
         new_population = Population()
         N = len(population)
@@ -37,27 +42,20 @@ class GA:
             offset += 1
 
         while offset < N:
-            logging.info('Create One Child')
             start_time = time.time()
 
             parents = cls._select(population)
 
             after_select = time.time()
 
-            logging.info('Selection: {}'.format(after_select - start_time))
-
             child1, child2 = cls._crossover(parents[0], parents[1])
 
             after_crossover = time.time()
-            logging.info('Crossover: {}'.format(
-                after_crossover - after_select))
 
             cls._mutate(child1)
             cls._mutate(child2)
 
             after_mutation = time.time()
-            logging.info('Mutation: {}'.format(
-                after_mutation - after_crossover))
 
             new_population.append_tour(child1)
             new_population.append_tour(child2)
@@ -72,16 +70,8 @@ class GA:
 
     @classmethod
     def _mutate(cls, tour: Tour):
-        N = Graph.num_nodes
-        for i in range(N):
-            if random.random() < cls.mutation_rate:
-                swap_index = random.randint(0, N-1)
-
-                temp = tour.get_node(i)
-                tour.add_node(i, tour.get_node(swap_index))
-                tour.add_node(swap_index, temp)
-
-        tour.update_distance()
+        mu.mutate_swap_connections(
+            tour, mutation_rate=cls.mutation_rate, only_better=False)
 
     @classmethod
     def _select(cls, population: Population) -> List[Tour]:
@@ -116,23 +106,45 @@ if __name__ == '__main__':
                         filemode='w', level=logging.INFO)
 
     from tsp_solver import TSP
+    import inspect
 
     problem = TSP()
     mode = "geo" if args.geo else "euc2d"
     problem.from_file(file_path, mode=mode)
 
+    logging.info('file: {}'.format(file_path))
+    logging.info('population size: {}'.format(population_size))
+    logging.info('fitness_evaluations: {}'.format(fitness_evaluations))
+    logging.info(inspect.getsource(GA._crossover))
+    logging.info(inspect.getsource(GA._select))
+    logging.info(inspect.getsource(GA._mutate))
+
     def solve_GA(problem, generations):
-        Graph.set_graph(problem.nodes, problem.distanceMatrix)
-        population = Population(population_size)
+        Graph.set_graph(problem.nodes, problem.distance_matrix)
+
+        tours = []
+        seed = Tour(path=solve_greedy(problem))
+        tours.append(seed)
+        for _ in range(population_size - 1):
+            tour = copy.deepcopy(seed)
+            mu.mutate_swap_connections(tour, mutation_rate=1)
+
+            tours.append(tour)
+
+        population = Population(population_size, tours=tours)
 
         for i in range(generations):
+            logging.info('\n{}th generation'.format(i))
+
             if verbose:
                 print('{}th generation'.format(i))
 
             population = GA.evolve_population(population)
 
+            best_tour = population.get_fittest()
+            logging.info('distance: {}'.format(best_tour.distance))
+
             if verbose:
-                best_tour = population.get_fittest()
                 print('distance: {}\n'.format(best_tour.distance))
 
         best_tour = population.get_fittest()
